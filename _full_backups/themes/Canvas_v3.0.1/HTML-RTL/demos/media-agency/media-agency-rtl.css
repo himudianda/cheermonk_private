@@ -1,0 +1,19 @@
+/* ----------------------------------------------------------------
+    Canvas: Media Agency Demo
+    Version: 1.0
+-----------------------------------------------------------------*/
+
+
+.side-cover-wrapper {
+	right: auto;
+	left: 0;
+}
+
+.side-cover-wrapper .owl-item div {
+	top: 0;
+	right: 0;
+}
+
+.header-social-set {
+	float: left;
+}
