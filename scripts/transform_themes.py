@@ -1,5 +1,6 @@
 import os
 import shutil
+import re
 
 cur_dir = os.getcwd()
 parent_dir = os.path.dirname(cur_dir)
@@ -9,13 +10,31 @@ tmp_dest_dir = "/tmp"
 METRONIC = {
     'name': "metronic",
     'dirname': "Metronic_v4.5.2",
-    'original_dirname': '/'.join([themes_dir, "Metronic_v4.5.2"])
+    'original_dirname': '/'.join([themes_dir, "Metronic_v4.5.2"]),
+    'words_to_replace': {
+        'metronic': 'cheermonk',
+        'Metronic': 'Cheermonk',
+        'themeforest.net': 'cheermonk.com',
+        'themeforest': 'cheermonk',
+        'keenthemes.com': 'cheermonk.com',
+        'keenthemes': 'cheermonk',
+        'KeenThemes': 'Cheermonk'
+    }
 }
 
 CANVAS = {
     'name': "canvas",
     'dirname': "Canvas_v3.0.1",
-    'original_dirname': '/'.join([themes_dir, "Canvas_v3.0.1"])
+    'original_dirname': '/'.join([themes_dir, "Canvas_v3.0.1"]),
+    'words_to_replace': {
+        'canvas': 'cheermonk',
+        'Canvas': 'Cheermonk',
+        'themeforest.net': 'cheermonk.com',
+        'themeforest': 'cheermonk',
+        'semicolonweb.com': 'cheermonk.com',
+        'semicolonweb': 'cheermonk',
+        'SemiColonWeb': 'Cheermonk'
+    }
 }
 
 THEMES = [METRONIC, CANVAS]
@@ -110,6 +129,39 @@ def delete_old_tmp_copy(theme):
     shutil.rmtree(theme['temp_dirname'])
 
 
+def do_renaming(theme):
+    sensitive_words = theme['words_to_replace']
+
+    dirname = theme['temp_dirname']
+    for root, dirs, files in os.walk(dirname):
+        for filename in files:
+            full_file_path = '/'.join([root, filename])
+
+            with open(full_file_path, 'r+') as infile:
+                data = infile.read()
+
+                pattern = re.compile(r'(' + '|'.join(sensitive_words.keys()) + r')')
+                result = pattern.sub(lambda x: sensitive_words[x.group()], data)
+
+                # http://stackoverflow.com/questions/6648493/open-file-for-both-reading-and-writing
+                infile.seek(0)
+                infile.write(result)
+                infile.truncate()
+
+                '''
+                for line in infile:
+
+                    # http://stackoverflow.com/questions/6531482/how-to-check-if-a-string-contains-an-element-from-a-list-in-python
+                    if any(word in line for word in sensitive_words):
+
+                        # http://stackoverflow.com/questions/2400504/easiest-way-to-replace-a-string-using-a-dictionary-of-replacements
+                        pattern = re.compile(r'\b(' + '|'.join(sensitive_words.keys()) + r')\b')
+                        result = pattern.sub(lambda x: sensitive_words[x.group()], line)
+
+                        print result
+                '''
+
+
 def main():
     for theme in THEMES:
         theme['temp_dirname'] = '/'.join([tmp_dest_dir, theme['dirname']])
@@ -118,6 +170,7 @@ def main():
         copy_theme_to_tmp(theme)
         organize_dirs(theme)
 
+        do_renaming(theme)
 
 if __name__ == "__main__":
     main()
