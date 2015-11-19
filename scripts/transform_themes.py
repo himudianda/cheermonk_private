@@ -190,12 +190,45 @@ def flaskify(theme):
     if not os.path.exists('/'.join([templates_root_dir, 'sample_frontend'])):
         os.mkdir('/'.join([templates_root_dir, 'sample_frontend']))
 
+    static_root_dir = '/home/himudian/Code/cheermonk/website/cheermonk/static'
+    if not os.path.exists(static_root_dir):
+        os.mkdir(static_root_dir)
+
+    if not os.path.exists('/'.join([static_root_dir, 'dashboard'])):
+        os.mkdir('/'.join([static_root_dir, 'dashboard']))
+
+    if not os.path.exists('/'.join([static_root_dir, 'frontend'])):
+        os.mkdir('/'.join([static_root_dir, 'frontend']))
+
     dirname = theme['temp_dirname']
     for root, dirs, files in os.walk(dirname):
+
+        # Ignore all template directories
+        if '/sample_' in root:
+            continue
+
+        # Create directories that dont exist
+        out_dir_path = root.replace(theme['temp_dirname'], '')
+        out_dir_path = ''.join([static_root_dir, out_dir_path])
+
+        if not os.path.exists(out_dir_path):
+            os.mkdir(out_dir_path)
+
         for filename in files:
 
-            # flaskify only template files and NOT the static files
+            # All static files ARE NOT to be Flaskified.
+            # Only copy it to the prject
             if '.html' not in filename:
+
+                full_file_path = '/'.join([root, filename])
+                with open(full_file_path, 'r') as infile:
+                    out_file_path = '/'.join([out_dir_path, filename])
+
+                    outfile = open(out_file_path, 'w')
+                    outfile.write(infile.read())
+                    outfile.close()
+
+                # Dont Flaskify static files
                 continue
 
             full_file_path = '/'.join([root, filename])
