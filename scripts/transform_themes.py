@@ -374,11 +374,10 @@ def flaskify(theme):
 
                             m = canvas_images_regex.search(line)
                             if m:
-                                img_endpoint = m.group(1)
-                                img_endpoint = img_endpoint.replace('/', '_')
+                                img_dir = m.group(1)
                                 line = re.sub(
                                     'img src="(.*?)"',
-                                    'img src="{{ url_for(\'static\', filename=\'frontend/'+img_endpoint+'\') }}"',
+                                    'img src="{{ url_for(\'static\', filename=\'frontend/'+img_dir+'\') }}"',
                                     line
                                 )
 
