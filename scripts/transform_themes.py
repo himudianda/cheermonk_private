@@ -177,7 +177,18 @@ def flaskify(theme):
     metronic_assets_regex = re.compile('../assets/(.*?)"')
     metronic_templates_regex = re.compile('href="(.*?).html"')
     canvas_assets_regex = re.compile('href="(.*?)"')
+    canvas_images_regex = re.compile('img src="(.*?)"')
     canvas_templates_regex = re.compile('href="(.*?).html"')
+
+    templates_root_dir = '/home/himudian/Code/cheermonk/website/cheermonk/templates'
+    if not os.path.exists(templates_root_dir):
+        os.mkdir(templates_root_dir)
+
+    if not os.path.exists('/'.join([templates_root_dir, 'sample_dashboard'])):
+        os.mkdir('/'.join([templates_root_dir, 'sample_dashboard']))
+
+    if not os.path.exists('/'.join([templates_root_dir, 'sample_frontend'])):
+        os.mkdir('/'.join([templates_root_dir, 'sample_frontend']))
 
     dirname = theme['temp_dirname']
     for root, dirs, files in os.walk(dirname):
@@ -188,21 +199,37 @@ def flaskify(theme):
                 continue
 
             full_file_path = '/'.join([root, filename])
-
-            with open(full_file_path, 'r+') as infile:
-
+            with open(full_file_path, 'r') as infile:
                 if theme['name'] == 'metronic':
+                    out_file_path = '/'.join([templates_root_dir, 'sample_dashboard', filename])
+                    outfile = open(out_file_path, 'w')
+
                     for line in infile.readlines():
                         m = metronic_assets_regex.search(line)
                         if m:
                             asset_dir = m.group(1)
-                            line = re.sub('"../assets/(.*?)"', '"{{ url_for(\'static\', filename=\'dashboard/'+asset_dir+'\') }}"', line)
+                            line = re.sub(
+                                '"../assets/(.*?)"',
+                                '"{{ url_for(\'static\', filename=\'dashboard/'+asset_dir+'\') }}"',
+                                line
+                            )
 
                         m = metronic_templates_regex.search(line)
                         if m:
                             endpoint = m.group(1)
-                            line = re.sub('"(.*?).html"', '"{{ url_for(\'sample_dashboard.'+endpoint+'\') }}"', line)
+                            line = re.sub(
+                                '"(.*?).html"',
+                                '"{{ url_for(\'sample_dashboard.'+endpoint+'\') }}"',
+                                line
+                            )
+
+                        outfile.write(line)
+                    outfile.close()
+
                 elif theme['name'] == 'canvas':
+                    out_file_path = '/'.join([templates_root_dir, 'sample_frontend', filename])
+                    outfile = open(out_file_path, 'w')
+
                     for line in infile.readlines():
                         if 'http' in line:
                             continue
@@ -212,31 +239,70 @@ def flaskify(theme):
                             asset_dir = m.group(1)
 
                             if asset_dir == '#':
-                                line = re.sub('"#"', '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"', line)
+                                line = re.sub(
+                                    '"#"',
+                                    '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                                    line
+                                )
                             else:
                                 if 'one-page' in full_file_path:
                                     if '../' in asset_dir:
                                         asset_dir = asset_dir.strip('../')
-                                        line = re.sub('"../(.*?)"', '"{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"', line)
-                                        #print line
+                                        line = re.sub(
+                                            '"../(.*?)"',
+                                            '"{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"',
+                                            line
+                                        )
                                     else:
-                                        #print full_file_path, 'href="frontend/one-page/"', asset_dir
-                                        line = re.sub('href="(.*?)"', 'href="{{ url_for(\'static\', filename=\'frontend/one-page/'+asset_dir+'\') }}"', line)
-                                        line = re.sub('src="(.*?)"', 'src="{{ url_for(\'static\', filename=\'frontend/one-page/'+asset_dir+'\') }}"', line)
-                                        #print line
+                                        line = re.sub(
+                                            'href="(.*?)"',
+                                            'href="{{ url_for(\'static\', filename=\'frontend/one-page/'+asset_dir+'\') }}"',
+                                            line
+                                        )
+
+                                        m = canvas_images_regex.search(line)
+                                        if m:
+                                            img_dir = m.group(1)
+                                            line = re.sub(
+                                                'src="(.*?)"',
+                                                'src="{{ url_for(\'static\', filename=\'frontend/one-page/'+img_dir+'\') }}"',
+                                                line
+                                            )
                                 else:
-                                    #print full_file_path, 'href="frontend/"', asset_dir
-                                    line = re.sub('href="(.*?)"', 'href="{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"', line)
-                                    line = re.sub('src="(.*?)"', 'src="{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"', line)
-                                    #print line
+                                    line = re.sub(
+                                        'href="(.*?)"',
+                                        'href="{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"',
+                                        line
+                                    )
+                                    m = canvas_images_regex.search(line)
+                                    if m:
+                                        img_dir = m.group(1)
+                                        line = re.sub(
+                                            'src="(.*?)"',
+                                            'src="{{ url_for(\'static\', filename=\'frontend/'+img_dir+'\') }}"',
+                                            line
+                                        )
 
                         m = canvas_templates_regex.search(line)
                         if m:
                             endpoint = m.group(1)
-                            line = re.sub('"(.*?).html"', '"{{ url_for(\'sample_frontend.'+endpoint+'\') }}"', line)
-                            if 'src=' in line:
-                                print line
-                            #print line
+                            line = re.sub(
+                                '"(.*?).html"',
+                                '"{{ url_for(\'sample_frontend.'+endpoint+'\') }}"',
+                                line
+                            )
+
+                            m = canvas_images_regex.search(line)
+                            if m:
+                                img_dir = m.group(1)
+                                line = re.sub(
+                                    'img src="(.*?)"',
+                                    'img src="{{ url_for(\'static\', filename=\'frontend/'+img_dir+'\') }}"',
+                                    line
+                                )
+
+                        outfile.write(line)
+                    outfile.close()
 
 
 def main():
