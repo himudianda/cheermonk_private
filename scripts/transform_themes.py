@@ -83,7 +83,9 @@ def organize_dirs(theme):
 
         # Move stuff to the correct location
         statics_folder = os.path.join(dst_folder, "frontend")
-        os.mkdir(statics_folder)
+
+        if not os.path.exists(statics_folder):
+            os.mkdir(statics_folder)
 
         dirs_to_move = ['HTML/css', 'HTML/demos', 'HTML/images', 'HTML/include', 'HTML/js', 'HTML/less']
         for directory in dirs_to_move:
@@ -91,15 +93,20 @@ def organize_dirs(theme):
             shutil.move(full_dirname, statics_folder)
 
         dirs_to_move = ['HTML/one-page/css', 'HTML/one-page/images', 'HTML/one-page/include']
-        files_to_move = ['HTML/one-page/onepage.css']
+        files_to_move = ['HTML/one-page/onepage.css', 'HTML/style.css', 'HTML/style-import.css', 'HTML/style.less']
         statics_one_page_folder = os.path.join(dst_folder, "frontend/one-page")
-        os.mkdir(statics_one_page_folder)
+
+        if not os.path.exists(statics_one_page_folder):
+            os.mkdir(statics_one_page_folder)
         for directory in dirs_to_move:
             full_dirname = os.path.join(dst_folder, directory)
             shutil.move(full_dirname, statics_one_page_folder)
         for file in files_to_move:
             full_filename = os.path.join(dst_folder, file)
-            shutil.move(full_filename, statics_one_page_folder)
+            if "one-page" in file:
+                shutil.move(full_filename, statics_one_page_folder)
+            else:
+                shutil.move(full_filename, statics_folder)
 
         # Rename the directories
         os.rename(os.path.join(dst_folder, 'HTML'), os.path.join(dst_folder, 'sample_frontend'))
@@ -119,6 +126,10 @@ def organize_dirs(theme):
 
         # Move stuff to the correct location
         dirs_to_move = ['theme/admin_2', 'theme/assets']
+        files_to_move = ['theme/admin_2/favicon.ico']
+        for file in files_to_move:
+            full_filename = os.path.join(dst_folder, file)
+            shutil.move(full_filename, '/'.join([dst_folder, 'theme/assets']))
         for directory in dirs_to_move:
             full_dirname = os.path.join(dst_folder, directory)
             shutil.move(full_dirname, dst_folder)
@@ -204,8 +215,8 @@ def flaskify(theme):
     for root, dirs, files in os.walk(dirname):
 
         # Ignore all template directories
-        if '/sample_' in root:
-            continue
+        #if '/sample_' in root:
+        #    continue
 
         # Create directories that dont exist
         out_dir_path = root.replace(theme['temp_dirname'], '')
