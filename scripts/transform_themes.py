@@ -221,6 +221,15 @@ def flaskify(theme):
     if not os.path.exists('/'.join([templates_root_dir, 'sample_frontend'])):
         os.mkdir('/'.join([templates_root_dir, 'sample_frontend']))
 
+    if not os.path.exists('/'.join([templates_root_dir, 'sample_frontend/one-page'])):
+        os.mkdir('/'.join([templates_root_dir, 'sample_frontend/one-page']))
+
+    if not os.path.exists('/'.join([templates_root_dir, 'sample_frontend/include'])):
+        os.mkdir('/'.join([templates_root_dir, 'sample_frontend/include']))
+
+    if not os.path.exists('/'.join([templates_root_dir, 'sample_frontend/include/ajax'])):
+        os.mkdir('/'.join([templates_root_dir, 'sample_frontend/include/ajax']))
+
     static_root_dir = '/home/himudian/Code/cheermonk/website/cheermonk/static'
     if not os.path.exists(static_root_dir):
         os.mkdir(static_root_dir)
@@ -291,7 +300,13 @@ def flaskify(theme):
                     outfile.close()
 
                 elif theme['name'] == 'canvas':
-                    out_file_path = '/'.join([templates_root_dir, 'sample_frontend', filename])
+
+                    if 'one-page' in full_file_path:
+                        out_file_path = '/'.join([templates_root_dir, 'sample_frontend/one-page', filename])
+                    elif 'include/ajax' in full_file_path:
+                        out_file_path = '/'.join([templates_root_dir, 'sample_frontend/include/ajax', filename])
+                    else:
+                        out_file_path = '/'.join([templates_root_dir, 'sample_frontend', filename])
                     outfile = open(out_file_path, 'w')
 
                     for line in infile.readlines():
