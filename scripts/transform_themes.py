@@ -365,6 +365,7 @@ def flaskify(theme):
                         m = canvas_templates_regex.search(line)
                         if m:
                             endpoint = m.group(1)
+                            endpoint = endpoint.replace('/', '_')
                             line = re.sub(
                                 '"(.*?).html"',
                                 '"{{ url_for(\'sample_frontend.'+endpoint+'\') }}"',
@@ -373,10 +374,11 @@ def flaskify(theme):
 
                             m = canvas_images_regex.search(line)
                             if m:
-                                img_dir = m.group(1)
+                                img_endpoint = m.group(1)
+                                img_endpoint = img_endpoint.replace('/', '_')
                                 line = re.sub(
                                     'img src="(.*?)"',
-                                    'img src="{{ url_for(\'static\', filename=\'frontend/'+img_dir+'\') }}"',
+                                    'img src="{{ url_for(\'static\', filename=\'frontend/'+img_endpoint+'\') }}"',
                                     line
                                 )
 
