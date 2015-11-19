@@ -131,16 +131,16 @@ def delete_old_tmp_copy(theme):
 
 def do_renaming(theme):
     sensitive_words = theme['words_to_replace']
+    pattern = re.compile(r'(' + '|'.join(sensitive_words.keys()) + r')')
 
     dirname = theme['temp_dirname']
     for root, dirs, files in os.walk(dirname):
         for filename in files:
             full_file_path = '/'.join([root, filename])
 
+            # Rename the contents within the file
             with open(full_file_path, 'r+') as infile:
                 data = infile.read()
-
-                pattern = re.compile(r'(' + '|'.join(sensitive_words.keys()) + r')')
                 result = pattern.sub(lambda x: sensitive_words[x.group()], data)
 
                 # http://stackoverflow.com/questions/6648493/open-file-for-both-reading-and-writing
@@ -160,6 +160,12 @@ def do_renaming(theme):
 
                         print result
                 '''
+
+            # Rename the directory/filenames
+            if any(word in filename for word in sensitive_words):
+                new_filename = pattern.sub(lambda x: sensitive_words[x.group()], filename)
+                new_file_path = '/'.join([root, new_filename])
+                os.rename(full_file_path, new_file_path)
 
 
 def main():
