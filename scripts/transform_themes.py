@@ -92,6 +92,26 @@ def organize_dirs(theme):
             full_dirname = os.path.join(dst_folder, directory)
             shutil.move(full_dirname, statics_folder)
 
+        # Move pending template files into templates/sample_frontend dir
+        files_to_move = [
+            'frontend/include/ajax/portfolio-single-gallery.html',
+            'frontend/include/ajax/portfolio-single-image.html',
+            'frontend/include/ajax/portfolio-single-thumbs.html',
+            'frontend/include/ajax/portfolio-single-video.html',
+            'frontend/include/ajax/shop-item.html'
+        ]
+        new_dirname = os.path.join(dst_folder, 'HTML/include')
+        if not os.path.exists(new_dirname):
+            os.mkdir(new_dirname)
+        new_dirname = os.path.join(new_dirname, 'ajax')
+        if not os.path.exists(new_dirname):
+            os.mkdir(new_dirname)
+
+        for file in files_to_move:
+            full_filename = os.path.join(dst_folder, file)
+            shutil.move(full_filename, new_dirname)
+
+        # Move pending asset files into static dir
         dirs_to_move = ['HTML/one-page/css', 'HTML/one-page/images', 'HTML/one-page/include']
         files_to_move = ['HTML/one-page/onepage.css', 'HTML/style.css', 'HTML/style-import.css', 'HTML/style.less']
         statics_one_page_folder = os.path.join(dst_folder, "frontend/one-page")
