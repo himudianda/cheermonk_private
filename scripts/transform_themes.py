@@ -215,17 +215,28 @@ def flaskify(theme):
                                 line = re.sub('"#"', '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"', line)
                             else:
                                 if 'one-page' in full_file_path:
-                                    if '../' in line:
-                                        print full_file_path, 'href="frontend/"', asset_dir
+                                    if '../' in asset_dir:
+                                        asset_dir = asset_dir.strip('../')
+                                        line = re.sub('"../(.*?)"', '"{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"', line)
+                                        #print line
                                     else:
-                                        print full_file_path, 'href="frontend/one-page/"', asset_dir
+                                        #print full_file_path, 'href="frontend/one-page/"', asset_dir
+                                        line = re.sub('href="(.*?)"', 'href="{{ url_for(\'static\', filename=\'frontend/one-page/'+asset_dir+'\') }}"', line)
+                                        line = re.sub('src="(.*?)"', 'src="{{ url_for(\'static\', filename=\'frontend/one-page/'+asset_dir+'\') }}"', line)
+                                        #print line
                                 else:
-                                    print full_file_path, 'href="frontend/"', asset_dir
+                                    #print full_file_path, 'href="frontend/"', asset_dir
+                                    line = re.sub('href="(.*?)"', 'href="{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"', line)
+                                    line = re.sub('src="(.*?)"', 'src="{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"', line)
+                                    #print line
 
                         m = canvas_templates_regex.search(line)
                         if m:
                             endpoint = m.group(1)
-                            #print "endpoint - ", endpoint
+                            line = re.sub('"(.*?).html"', '"{{ url_for(\'sample_frontend.'+endpoint+'\') }}"', line)
+                            if 'src=' in line:
+                                print line
+                            #print line
 
 
 def main():
