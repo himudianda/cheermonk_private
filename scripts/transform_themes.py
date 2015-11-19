@@ -301,7 +301,7 @@ def flaskify(theme):
 
                 elif theme['name'] == 'canvas':
 
-                    if 'one-page' in full_file_path:
+                    if 'one-page/' in full_file_path:
                         out_file_path = '/'.join([templates_root_dir, 'sample_frontend/one-page', filename])
                     elif 'include/ajax' in full_file_path:
                         out_file_path = '/'.join([templates_root_dir, 'sample_frontend/include/ajax', filename])
@@ -372,14 +372,14 @@ def flaskify(theme):
                                 line
                             )
 
-                            m = canvas_images_regex.search(line)
-                            if m:
-                                img_dir = m.group(1)
-                                line = re.sub(
-                                    'img src="(.*?)"',
-                                    'img src="{{ url_for(\'static\', filename=\'frontend/'+img_dir+'\') }}"',
-                                    line
-                                )
+                        m = canvas_images_regex.search(line)
+                        if m:
+                            img_dir = m.group(1)
+                            line = re.sub(
+                                'img src="(.*?)"',
+                                'img src="{{ url_for(\'static\', filename=\'frontend/'+img_dir+'\') }}"',
+                                line
+                            )
 
                         outfile.write(line)
                     outfile.close()
