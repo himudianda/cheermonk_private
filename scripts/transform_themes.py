@@ -91,11 +91,15 @@ def organize_dirs(theme):
             shutil.move(full_dirname, statics_folder)
 
         dirs_to_move = ['HTML/one-page/css', 'HTML/one-page/images', 'HTML/one-page/include']
+        files_to_move = ['HTML/one-page/onepage.css']
         statics_one_page_folder = os.path.join(dst_folder, "frontend/one-page")
         os.mkdir(statics_one_page_folder)
         for directory in dirs_to_move:
             full_dirname = os.path.join(dst_folder, directory)
             shutil.move(full_dirname, statics_one_page_folder)
+        for file in files_to_move:
+            full_filename = os.path.join(dst_folder, file)
+            shutil.move(full_filename, statics_one_page_folder)
 
         # Rename the directories
         os.rename(os.path.join(dst_folder, 'HTML'), os.path.join(dst_folder, 'sample_frontend'))
@@ -168,6 +172,62 @@ def do_renaming(theme):
                 os.rename(full_file_path, new_file_path)
 
 
+def flaskify(theme):
+
+    metronic_assets_regex = re.compile('../assets/(.*?)"')
+    metronic_templates_regex = re.compile('href="(.*?).html"')
+    canvas_assets_regex = re.compile('href="(.*?)"')
+    canvas_templates_regex = re.compile('href="(.*?).html"')
+
+    dirname = theme['temp_dirname']
+    for root, dirs, files in os.walk(dirname):
+        for filename in files:
+
+            # flaskify only template files and NOT the static files
+            if '.html' not in filename:
+                continue
+
+            full_file_path = '/'.join([root, filename])
+
+            with open(full_file_path, 'r+') as infile:
+
+                if theme['name'] == 'metronic':
+                    for line in infile.readlines():
+                        m = metronic_assets_regex.search(line)
+                        if m:
+                            asset_dir = m.group(1)
+                            line = re.sub('"../assets/(.*?)"', '"{{ url_for(\'static\', filename=\'dashboard/'+asset_dir+'\') }}"', line)
+
+                        m = metronic_templates_regex.search(line)
+                        if m:
+                            endpoint = m.group(1)
+                            line = re.sub('"(.*?).html"', '"{{ url_for(\'sample_dashboard.'+endpoint+'\') }}"', line)
+                elif theme['name'] == 'canvas':
+                    for line in infile.readlines():
+                        if 'http' in line:
+                            continue
+
+                        m = canvas_assets_regex.search(line)
+                        if m and '.html' not in m.group(1):
+                            asset_dir = m.group(1)
+
+                            if asset_dir == '#':
+                                line = re.sub('"#"', '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"', line)
+                            else:
+                                if 'one-page' in full_file_path:
+                                    if '../' in line:
+                                        print full_file_path, 'href="frontend/"', asset_dir
+                                    else:
+                                        print full_file_path, 'href="frontend/one-page/"', asset_dir
+                                else:
+                                    print full_file_path, 'href="frontend/"', asset_dir
+
+                        m = canvas_templates_regex.search(line)
+                        if m:
+                            endpoint = m.group(1)
+                            #print "endpoint - ", endpoint
+
+
 def main():
     for theme in THEMES:
         theme['temp_dirname'] = '/'.join([tmp_dest_dir, theme['dirname']])
@@ -177,6 +237,8 @@ def main():
         organize_dirs(theme)
 
         do_renaming(theme)
+
+        flaskify(theme)
 
 if __name__ == "__main__":
     main()
