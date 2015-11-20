@@ -283,6 +283,7 @@ def flaskify_canvas_theme(theme):
                         outfile.write(line)
                         continue
 
+                    # Apply css asset specific regex & transformation
                     m = canvas_assets_regex.search(line)
                     if m and '.html' not in m.group(1):
                         asset_dir = m.group(1)
@@ -299,6 +300,33 @@ def flaskify_canvas_theme(theme):
                                 'href="{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
                                 line
                             )
+
+                    # Apply js/img specific regex & transformation
+                    m = canvas_img_js_regex.search(line)
+                    if m:
+                        asset_dir = m.group(1)
+                        asset_dir = os.path.join(theme['assets_name'], asset_dir)
+                        line = re.sub(
+                            'src="(.*?)"',
+                            'src="{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                            line
+                        )
+
+
+                    # Apply template specific regex & transformation
+                    m = canvas_templates_regex.search(line)
+                    if m:
+                        endpoint = m.group(1)
+                        endpoint = endpoint.replace('/', '_').replace('-', '_')
+
+                        if endpoint.startswith("40") or endpoint.startswith("50"):
+                            endpoint = '_'+endpoint
+
+                        line = re.sub(
+                            '"(.*?).html"',
+                            '"{{ url_for(\'sample_frontend.'+endpoint+'\') }}"',
+                            line
+                        )
 
 
 
