@@ -290,7 +290,16 @@ def flaskify_canvas_theme(theme):
                         # If url is marked as # - dont flaskify it
                         # coz flask url_for breaks when url is #
                         if asset_dir != '#':
-                            pass
+                            file_dir_name = os.path.dirname(full_file_path)
+                            dir_rel_path = os.path.relpath(file_dir_name, theme_template_dir)
+
+                            asset_dir = os.path.join(theme['assets_name'], dir_rel_path, asset_dir)
+                            line = re.sub(
+                                'href="(.*?)"',
+                                'href="{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                                line
+                            )
+
 
 
                     # NOTE: Every line must be written to outfile
