@@ -1,10 +1,9 @@
 import os
 from string import Template
 
+project_dir = "/home/himudian/Code/cheermonk/website/cheermonk"
 templates_dir = "/home/himudian/Code/cheermonk/website/cheermonk/templates"
 templates = ["sample_dashboard", "sample_frontend"]
-
-project_dir = "/home/himudian/Code/cheermonk/website/cheermonk"
 
 views_template = Template('''
 
@@ -14,8 +13,7 @@ def $func_name():
 ''')
 
 
-def list_files(template):
-
+def write_views(template):
     outdir_path = os.path.join(project_dir, 'blueprints', template)
     outfile_path = os.path.join(outdir_path, 'views.py')
     outfile = open(outfile_path, 'w')
@@ -37,11 +35,17 @@ def list_files(template):
             path = '/'.join([rel_dir, file])
 
             if name == 'index':
-                outfile.write(views_template.substitute(url_name='', func_name=name, path=path, template=template))
+                outfile.write(
+                    views_template.substitute(url_name='', func_name=name, path=path, template=template)
+                )
             elif name.startswith("40") or name.startswith("50"):
-                outfile.write(views_template.substitute(url_name=name, func_name=("_"+name), path=path, template=template))
+                outfile.write(
+                    views_template.substitute(url_name=name, func_name=("_"+name), path=path, template=template)
+                )
             else:
-                outfile.write(views_template.substitute(url_name=name, func_name=name, path=path, template=template))
+                outfile.write(
+                    views_template.substitute(url_name=name, func_name=name, path=path, template=template)
+                )
 
     outfile.truncate()
     outfile.close()
@@ -49,7 +53,7 @@ def list_files(template):
 
 def main():
     for template in templates:
-        list_files(template)
+        write_views(template)
 
 
 if __name__ == "__main__":
