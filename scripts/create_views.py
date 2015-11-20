@@ -5,6 +5,7 @@ project_dir = "/home/himudian/Code/cheermonk/website/cheermonk"
 templates_dir = "/home/himudian/Code/cheermonk/website/cheermonk/templates"
 templates = ["sample_dashboard", "sample_frontend"]
 
+# This is how the views look like in Flask
 views_template = Template('''
 
 @$template.route('/$url_name')
@@ -17,8 +18,11 @@ def write_views(template):
     outdir_path = os.path.join(project_dir, 'blueprints', template)
     outfile_path = os.path.join(outdir_path, 'views.py')
     outfile = open(outfile_path, 'w')
+
+    # Overwrite the outfile if it already exists
     outfile.seek(0)
 
+    # This is required at the top of the views file
     outfile.write("from flask import Blueprint, render_template\n\n")
     outfile.write("{0} = Blueprint('{0}', __name__, template_folder='templates')\n".format(template))
 
@@ -35,10 +39,13 @@ def write_views(template):
             path = '/'.join([rel_dir, file])
 
             if name == 'index':
+                # index template should be at url="/" & not "/index"
                 outfile.write(
                     views_template.substitute(url_name='', func_name=name, path=path, template=template)
                 )
             elif name.startswith("40") or name.startswith("50"):
+                # 404, 500 & 502 pages could cause variable names to start with a digit
+                # which isnt allowed in python. Hence; append it with an underscore.
                 outfile.write(
                     views_template.substitute(url_name=name, func_name=("_"+name), path=path, template=template)
                 )
