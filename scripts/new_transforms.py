@@ -235,9 +235,10 @@ def flaskify_metronic_theme(theme):
                     m = metronic_assets_regex.search(line)
                     if m:
                         asset_dir = m.group(1)
+                        asset_dir = os.path.join(theme['assets_name'], asset_dir)
                         line = re.sub(
                             '"../assets/(.*?)"',
-                            '"{{ url_for(\'static\', filename=\'dashboard/'+asset_dir+'\') }}"',
+                            '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
                             line
                         )
 
@@ -247,7 +248,7 @@ def flaskify_metronic_theme(theme):
                         endpoint = m.group(1)
                         line = re.sub(
                             '"(.*?).html"',
-                            '"{{ url_for(\'sample_dashboard.'+endpoint+'\') }}"',
+                            '"{{ url_for(\''+theme['templates_name']+'.'+endpoint+'\') }}"',
                             line
                         )
 
@@ -324,7 +325,7 @@ def flaskify_canvas_theme(theme):
 
                         line = re.sub(
                             '"(.*?).html"',
-                            '"{{ url_for(\'sample_frontend.'+endpoint+'\') }}"',
+                            '"{{ url_for(\''+theme['templates_name']+'.'+endpoint+'\') }}"',
                             line
                         )
 
