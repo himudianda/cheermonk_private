@@ -1,5 +1,6 @@
 import os
 import re
+import StringIO
 
 from lib.dir_tree import create_dir_tree, copy_dir_tree, delete_dir_tree, create_dir
 
@@ -226,7 +227,8 @@ def flaskify_metronic_theme(theme):
         for filename in files:
             full_file_path = '/'.join([root, filename])
 
-            with open(full_file_path, 'r') as infile:
+            with open(full_file_path, 'r+') as infile:
+                outfile = StringIO.StringIO()
                 for line in infile.readlines():
 
                     # Apply asset specific regex & transformation
@@ -249,7 +251,12 @@ def flaskify_metronic_theme(theme):
                             line
                         )
 
-                    print line
+                    outfile.write(line)
+
+                # Overwrite the input file now
+                infile.seek(0)
+                infile.write(outfile.getvalue())
+                infile.truncate()
 
 
 def flaskify(theme):
