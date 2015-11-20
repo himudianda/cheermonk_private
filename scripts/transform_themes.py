@@ -208,7 +208,7 @@ def flaskify(theme):
     metronic_assets_regex = re.compile('../assets/(.*?)"')
     metronic_templates_regex = re.compile('href="(.*?).html"')
     canvas_assets_regex = re.compile('href="(.*?)"')
-    canvas_images_regex = re.compile('img src="(.*?)"')
+    canvas_img_js_regex = re.compile('src="(.*?)"')
     canvas_templates_regex = re.compile('href="(.*?).html"')
 
     templates_root_dir = '/home/himudian/Code/cheermonk/website/cheermonk/templates'
@@ -339,7 +339,7 @@ def flaskify(theme):
                                             line
                                         )
 
-                                        m = canvas_images_regex.search(line)
+                                        m = canvas_img_js_regex.search(line)
                                         if m:
                                             img_dir = m.group(1)
                                             line = re.sub(
@@ -353,7 +353,7 @@ def flaskify(theme):
                                         'href="{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"',
                                         line
                                     )
-                                    m = canvas_images_regex.search(line)
+                                    m = canvas_img_js_regex.search(line)
                                     if m:
                                         img_dir = m.group(1)
                                         line = re.sub(
@@ -376,12 +376,12 @@ def flaskify(theme):
                                 line
                             )
 
-                        m = canvas_images_regex.search(line)
+                        m = canvas_img_js_regex.search(line)
                         if m:
                             img_dir = m.group(1)
                             line = re.sub(
-                                'img src="(.*?)"',
-                                'img src="{{ url_for(\'static\', filename=\'frontend/'+img_dir+'\') }}"',
+                                'src="(.*?)"',
+                                'src="{{ url_for(\'static\', filename=\'frontend/'+img_dir+'\') }}"',
                                 line
                             )
 
