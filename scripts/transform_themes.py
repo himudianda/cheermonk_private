@@ -318,11 +318,7 @@ def flaskify(theme):
                             asset_dir = m.group(1)
 
                             if asset_dir == '#':
-                                line = re.sub(
-                                    '"#"',
-                                    '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
-                                    line
-                                )
+                                pass
                             else:
                                 if 'one-page' in full_file_path:
                                     if '../' in asset_dir:
