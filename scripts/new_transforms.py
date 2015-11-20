@@ -1,6 +1,7 @@
 import os
 import re
 import StringIO
+import shutil
 
 from lib.dir_tree import create_dir_tree, copy_dir_tree, delete_dir_tree, create_dir
 
@@ -352,6 +353,23 @@ def flaskify(theme):
         flaskify_canvas_theme(theme)
 
 
+def overwrite_cheermonk_project_files(theme):
+    proj_templates_dir = '/home/himudian/Code/cheermonk/website/cheermonk/templates'
+    proj_static_dir = '/home/himudian/Code/cheermonk/website/cheermonk/static'
+
+    # Delete existing template & static dir for cheermonk project
+    delete_dir_tree(os.path.join(proj_templates_dir, theme['templates_name']))
+    delete_dir_tree(os.path.join(proj_static_dir, theme['assets_name']))
+
+    # Move templates & static directory from /tmp to cheermonk project directory
+    shutil.move(os.path.join(theme['temp_dirname'], theme['templates_name']), proj_templates_dir)
+    shutil.move(os.path.join(theme['temp_dirname'], theme['assets_name']), proj_static_dir)
+
+
+def remove_tmp_files(theme):
+    delete_dir_tree(theme['temp_dirname'])
+
+
 def main():
     for theme in THEMES:
         delete_old_tmp_copy(theme)
@@ -359,6 +377,8 @@ def main():
         organize_theme_dirs(theme)
         rename_sensitive_words(theme)
         flaskify(theme)
+        overwrite_cheermonk_project_files(theme)
+        remove_tmp_files(theme)
 
 if __name__ == "__main__":
     main()
