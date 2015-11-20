@@ -112,7 +112,6 @@ def organize_metronic_static_assets(theme):
     delete_dir_tree(src_dir)
 
 
-
 def organize_metronic_templates(theme):
     src_dir = os.path.join(theme['temp_dirname'], 'theme', 'admin_2')
     dst_dir = os.path.join(theme['temp_dirname'], theme['templates_name'])
@@ -122,7 +121,8 @@ def organize_metronic_templates(theme):
     copy_dir_tree(src_dir, dst_dir, [], [])
 
     # Remove old metronic templates dir
-    delete_dir_tree(src_dir)
+    parent_dir = os.path.dirname(src_dir)
+    delete_dir_tree(parent_dir)
 
 
 def organize_canvas_static_assets(theme):
@@ -130,7 +130,27 @@ def organize_canvas_static_assets(theme):
 
 
 def organize_canvas_templates(theme):
-    pass
+    src_dir = os.path.join(theme['temp_dirname'], 'HTML')
+    dst_dir = os.path.join(theme['temp_dirname'], theme['templates_name'])
+
+    # Copy over metronic templates to new dir
+    create_dir_tree(src_dir, dst_dir, [])
+    copy_dir_tree(src_dir, dst_dir, [], [])
+
+    # Remove some unwanted assets dir & files in templates dir
+    delete_dir_tree(os.path.join(dst_dir, 'css'))
+    delete_dir_tree(os.path.join(dst_dir, 'demos'))
+    delete_dir_tree(os.path.join(dst_dir, 'images'))
+    delete_dir_tree(os.path.join(dst_dir, 'include'))
+    delete_dir_tree(os.path.join(dst_dir, 'js'))
+    delete_dir_tree(os.path.join(dst_dir, 'less'))
+
+    delete_dir_tree(os.path.join(dst_dir, 'one-page/css'))
+    delete_dir_tree(os.path.join(dst_dir, 'one-page/images'))
+    delete_dir_tree(os.path.join(dst_dir, 'one-page/include'))
+
+    # Remove old canvas templates dir
+    delete_dir_tree(src_dir)
 
 
 def organize_theme_dirs(theme):
@@ -141,7 +161,7 @@ def organize_theme_dirs(theme):
         organize_metronic_templates(theme)
     elif theme['name'] == "canvas":
         organize_canvas_static_assets(theme)
-        organize_canvas_static_assets(theme)
+        organize_canvas_templates(theme)
 
     # Remove all other directories
 
