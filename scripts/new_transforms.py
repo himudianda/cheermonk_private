@@ -1,4 +1,5 @@
 import os
+import re
 
 from lib.dir_tree import create_dir_tree, copy_dir_tree, delete_dir_tree, create_dir
 
@@ -184,11 +185,42 @@ def organize_theme_dirs(theme):
     # Remove all other directories
 
 
+def rename_sensitive_words(theme):
+    '''
+        Remove all theme specific words & urls
+    '''
+    sensitive_words = theme['words_to_replace']
+    pattern = re.compile(r'(' + '|'.join(sensitive_words.keys()) + r')')
+
+    for root, dirs, files in os.walk(theme['temp_dirname']):
+        for filename in files:
+            full_file_path = os.path.join(root, filename)
+
+            # Rename sensitive words within files
+            with open(full_file_path, 'r+') as infile:
+                data = infile.read()
+                result = pattern.sub(lambda x: sensitive_words[x.group()], data)
+
+                # http://stackoverflow.com/questions/6648493/open-file-for-both-reading-and-writing
+                # Overwrite the file
+                infile.seek(0)
+                infile.write(result)
+                infile.truncate()
+
+            # Rename directory/filenames to remove sensitive words
+            if any(word in filename for word in sensitive_words):
+                new_filename = pattern.sub(lambda x: sensitive_words[x.group()], filename)
+
+                new_file_path = os.path.join(root, new_filename)
+                os.rename(full_file_path, new_file_path)
+
+
 def main():
     for theme in THEMES:
         delete_old_tmp_copy(theme)
         copy_theme_to_tmp(theme)
         organize_theme_dirs(theme)
+        rename_sensitive_words(theme)
 
 
 if __name__ == "__main__":
