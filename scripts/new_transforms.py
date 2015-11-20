@@ -1,4 +1,5 @@
 import os
+
 from lib.dir_tree import create_dir_tree, copy_dir_tree, delete_dir_tree
 
 
@@ -82,15 +83,46 @@ def copy_theme_to_tmp(theme):
 
 
 def organize_metronic_static_assets(theme):
-    pass
+    src_dir = os.path.join(theme['temp_dirname'], 'theme', 'assets')
+    dst_dir = os.path.join(theme['temp_dirname'], theme['assets_name'])
+
+    # Copy over metronic static assets to new dir
+    create_dir_tree(src_dir, dst_dir, [])
+    copy_dir_tree(src_dir, dst_dir, [], [])
+
+    # Remove some unwanted HTML files in assets dir
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/jqvmap/samples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/fullcalendar/demos'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/ckeditor/samples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amstockcharts/plugins/dataloader/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'plugins/amcharts/amstockcharts/plugins/responsive/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'plugins/amcharts/amstockcharts/plugins/export/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/ammap/plugins/dataloader/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/ammap/plugins/export/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'plugins/amcharts/amcharts/plugins/dataloader/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amcharts/plugins/responsive/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amstockcharts/plugins/responsive/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amstockcharts/plugins/export/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/ammap/plugins/responsive/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amcharts/plugins/dataloader/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amcharts/plugins/export/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/morris/examples'))
+
+    # Remove old metronic static assets dir
+    delete_dir_tree(src_dir)
+
 
 
 def organize_metronic_templates(theme):
     src_dir = os.path.join(theme['temp_dirname'], 'theme', 'admin_2')
     dst_dir = os.path.join(theme['temp_dirname'], theme['templates_name'])
 
+    # Copy over metronic templates to new dir
     create_dir_tree(src_dir, dst_dir, [])
     copy_dir_tree(src_dir, dst_dir, [], [])
+
+    # Remove old metronic templates dir
+    delete_dir_tree(src_dir)
 
 
 def organize_canvas_static_assets(theme):
