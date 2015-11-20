@@ -12,6 +12,8 @@ METRONIC = {
     'dirname': "Metronic_v4.5.2",
     'original_dirname': os.path.join(themes_dir, "Metronic_v4.5.2"),
     'temp_dirname': os.path.join(tmp_dest_dir, "Metronic_v4.5.2"),
+    'assets_name': "dashboard",
+    'templates_name': "sample_dashboard",
     'words_to_replace': {
         'metronic': 'cheermonk',
         'Metronic': 'Cheermonk',
@@ -42,6 +44,8 @@ CANVAS = {
     'dirname': "Canvas_v3.0.1",
     'original_dirname': os.path.join(themes_dir, "Canvas_v3.0.1"),
     'temp_dirname': os.path.join(tmp_dest_dir, "Canvas_v3.0.1"),
+    'assets_name': "frontend",
+    'templates_name': "sample_frontend",
     'words_to_replace': {
         'canvas': 'cheermonk',
         'Canvas': 'Cheermonk',
@@ -77,10 +81,44 @@ def copy_theme_to_tmp(theme):
     copy_dir_tree(source_folder, dst_folder, theme['dirs_to_ignore'], theme['files_to_ignore'])
 
 
+def organize_metronic_static_assets(theme):
+    pass
+
+
+def organize_metronic_templates(theme):
+    src_dir = os.path.join(theme['temp_dirname'], 'theme', 'admin_2')
+    dst_dir = os.path.join(theme['temp_dirname'], theme['templates_name'])
+
+    create_dir_tree(src_dir, dst_dir, [])
+    copy_dir_tree(src_dir, dst_dir, [], [])
+
+
+def organize_canvas_static_assets(theme):
+    pass
+
+
+def organize_canvas_templates(theme):
+    pass
+
+
+def organize_theme_dirs(theme):
+    # Move all static_assets to static_assets dir
+    # More all templates to templates dir
+    if theme['name'] == "metronic":
+        organize_metronic_static_assets(theme)
+        organize_metronic_templates(theme)
+    elif theme['name'] == "canvas":
+        organize_canvas_static_assets(theme)
+        organize_canvas_static_assets(theme)
+
+    # Remove all other directories
+
+
 def main():
     for theme in THEMES:
         delete_old_tmp_copy(theme)
         copy_theme_to_tmp(theme)
+        organize_theme_dirs(theme)
 
 
 if __name__ == "__main__":
