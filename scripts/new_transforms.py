@@ -1,6 +1,6 @@
 import os
 
-from lib.dir_tree import create_dir_tree, copy_dir_tree, delete_dir_tree
+from lib.dir_tree import create_dir_tree, copy_dir_tree, delete_dir_tree, create_dir
 
 
 cur_dir = os.getcwd()
@@ -126,7 +126,25 @@ def organize_metronic_templates(theme):
 
 
 def organize_canvas_static_assets(theme):
-    pass
+    dir_names = ['css', 'demos', 'images', 'js', 'one-page/css', 'one-page/images']
+
+    # Create the parents directories before the child directories are created in the for
+    # loop below.
+    dst_assets_dir = os.path.join(theme['temp_dirname'], theme['assets_name'])
+    create_dir(dst_assets_dir)
+    dst_assets_dir = os.path.join(theme['temp_dirname'], theme['assets_name'], 'one-page')
+    create_dir(dst_assets_dir)
+
+    for dirname in dir_names:
+        src_dir = os.path.join(theme['temp_dirname'], 'HTML', dirname)
+        dst_dir = os.path.join(theme['temp_dirname'], theme['assets_name'], dirname)
+
+        create_dir_tree(src_dir, dst_dir, [])
+        copy_dir_tree(src_dir, dst_dir, [], [])
+
+
+        # Remove old canvas static assets dir
+        delete_dir_tree(src_dir)
 
 
 def organize_canvas_templates(theme):

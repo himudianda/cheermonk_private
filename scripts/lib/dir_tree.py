@@ -42,6 +42,11 @@ def copy_dir_tree(source_folder, destination_folder, dirs_to_ignore, files_to_ig
                 shutil.copy2(src_file_path, dst_file_path)
 
 
+def create_dir(directoy):
+    if not os.path.exists(directoy):
+        os.mkdir(directoy)
+
+
 def delete_dir_tree(directoy):
     '''
         Delete entire directoy tree
