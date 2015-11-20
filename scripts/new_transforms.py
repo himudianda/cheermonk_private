@@ -215,13 +215,55 @@ def rename_sensitive_words(theme):
                 os.rename(full_file_path, new_file_path)
 
 
+def flaskify_metronic_theme(theme):
+    metronic_assets_regex = re.compile('../assets/(.*?)"')
+    metronic_templates_regex = re.compile('href="(.*?).html"')
+
+    # Only flaskify template files - no static assets should be flaskified.
+    theme_template_dir = os.path.join(theme['temp_dirname'], theme['templates_name'])
+
+    for root, dirs, files in os.walk(theme_template_dir):
+        for filename in files:
+            full_file_path = '/'.join([root, filename])
+
+            with open(full_file_path, 'r') as infile:
+                for line in infile.readlines():
+
+                    # Apply asset specific regex & transformation
+                    m = metronic_assets_regex.search(line)
+                    if m:
+                        asset_dir = m.group(1)
+                        line = re.sub(
+                            '"../assets/(.*?)"',
+                            '"{{ url_for(\'static\', filename=\'dashboard/'+asset_dir+'\') }}"',
+                            line
+                        )
+
+                    # Apply template specific regex & transformation
+                    m = metronic_templates_regex.search(line)
+                    if m:
+                        endpoint = m.group(1)
+                        line = re.sub(
+                            '"(.*?).html"',
+                            '"{{ url_for(\'sample_dashboard.'+endpoint+'\') }}"',
+                            line
+                        )
+
+                    print line
+
+
+def flaskify(theme):
+    if theme['name'] == "metronic":
+        flaskify_metronic_theme(theme)
+
+
 def main():
     for theme in THEMES:
         delete_old_tmp_copy(theme)
         copy_theme_to_tmp(theme)
         organize_theme_dirs(theme)
         rename_sensitive_words(theme)
-
+        flaskify(theme)
 
 if __name__ == "__main__":
     main()
