@@ -365,7 +365,11 @@ def flaskify(theme):
                         m = canvas_templates_regex.search(line)
                         if m:
                             endpoint = m.group(1)
-                            endpoint = endpoint.replace('/', '_')
+                            endpoint = endpoint.replace('/', '_').replace('-', '_')
+
+                            if endpoint.startswith("40") or endpoint.startswith("50"):
+                                endpoint = '_'+endpoint
+
                             line = re.sub(
                                 '"(.*?).html"',
                                 '"{{ url_for(\'sample_frontend.'+endpoint+'\') }}"',

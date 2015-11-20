@@ -38,6 +38,8 @@ def list_files(template):
 
             if name == 'index':
                 outfile.write(views_template.substitute(url_name='', func_name=name, path=path, template=template))
+            elif name.startswith("40") or name.startswith("50"):
+                outfile.write(views_template.substitute(url_name=name, func_name=("_"+name), path=path, template=template))
             else:
                 outfile.write(views_template.substitute(url_name=name, func_name=name, path=path, template=template))
 
