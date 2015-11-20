@@ -259,9 +259,59 @@ def flaskify_metronic_theme(theme):
                 infile.truncate()
 
 
+
+def flaskify_canvas_theme(theme):
+    canvas_assets_regex = re.compile('href="(.*?)"')
+    canvas_img_js_regex = re.compile('src="(.*?)"')
+    canvas_templates_regex = re.compile('href="(.*?).html"')
+
+    # Only flaskify template files - no static assets should be flaskified.
+    theme_template_dir = os.path.join(theme['temp_dirname'], theme['templates_name'])
+
+    for root, dirs, files in os.walk(theme_template_dir):
+        for filename in files:
+            full_file_path = '/'.join([root, filename])
+
+            with open(full_file_path, 'r+') as infile:
+                outfile = StringIO.StringIO()
+                for line in infile.readlines():
+                    # If public CDN is used for static assets - they will have http: or https:
+                    # in the line. Ignore flaskifying those lines
+                    if 'http:' in line or 'https:' in line:
+                        # NOTE: Every line must be written to outfile
+                        # even if no transformations were applied.
+                        outfile.write(line)
+                        continue
+
+                    m = canvas_assets_regex.search(line)
+                    if m and '.html' not in m.group(1):
+                        asset_dir = m.group(1)
+
+                        # If url is marked as # - dont flaskify it
+                        # coz flask url_for breaks when url is #
+                        if asset_dir != '#':
+                            pass
+
+
+                    # NOTE: Every line must be written to outfile
+                    # even if no transformations were applied.
+                    outfile.write(line)
+
+
+                # Overwrite the input file now
+                infile.seek(0)
+                infile.write(outfile.getvalue())
+                infile.truncate()
+                outfile.close()
+
+
+
+
 def flaskify(theme):
     if theme['name'] == "metronic":
         flaskify_metronic_theme(theme)
+    if theme['name'] == "canvas":
+        flaskify_canvas_theme(theme)
 
 
 def main():
