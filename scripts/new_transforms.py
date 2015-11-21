@@ -129,7 +129,7 @@ def organize_metronic_templates(theme):
 
 
 def organize_canvas_static_assets(theme):
-    dir_names = ['css', 'demos', 'images', 'js', 'one-page/css', 'one-page/images']
+    dir_names = ['css', 'demos', 'images', 'js', 'include', 'one-page/css', 'one-page/images', 'one-page/include']
     files_to_move = ['one-page/onepage.css', 'style.css', 'style-import.css', 'style.less']
 
     # Create the parents directories before the child directories are created in the for
