@@ -130,6 +130,7 @@ def organize_metronic_templates(theme):
 
 def organize_canvas_static_assets(theme):
     dir_names = ['css', 'demos', 'images', 'js', 'one-page/css', 'one-page/images']
+    files_to_move = ['one-page/onepage.css', 'style.css', 'style-import.css', 'style.less']
 
     # Create the parents directories before the child directories are created in the for
     # loop below.
@@ -138,13 +139,16 @@ def organize_canvas_static_assets(theme):
     dst_assets_dir = os.path.join(theme['temp_dirname'], theme['assets_name'], 'one-page')
     create_dir(dst_assets_dir)
 
+    for file in files_to_move:
+        full_filename = os.path.join(theme['temp_dirname'], 'HTML', file)
+        shutil.move(full_filename, os.path.join(theme['temp_dirname'], theme['assets_name'], file))
+
     for dirname in dir_names:
         src_dir = os.path.join(theme['temp_dirname'], 'HTML', dirname)
         dst_dir = os.path.join(theme['temp_dirname'], theme['assets_name'], dirname)
 
         create_dir_tree(src_dir, dst_dir, [])
         copy_dir_tree(src_dir, dst_dir, [], [])
-
 
         # Remove old canvas static assets dir
         delete_dir_tree(src_dir)
