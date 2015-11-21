@@ -265,10 +265,12 @@ def flaskify_metronic_theme(theme):
                 infile.truncate()
 
 
-
 def flaskify_canvas_theme(theme):
     canvas_assets_regex = re.compile('href="(.*?)"')
     canvas_img_js_regex = re.compile('src="(.*?)"')
+    canvas_img_js_regex2 = re.compile("src='(.*?)'")
+    canvas_images_regex = re.compile('"images/(.*?)"')
+    canvas_url_regex = re.compile(r": url\('(.*?)'")
     canvas_templates_regex = re.compile('href="(.*?).html"')
 
     # Only flaskify template files - no static assets should be flaskified.
@@ -318,6 +320,39 @@ def flaskify_canvas_theme(theme):
                             line
                         )
 
+                    # Apply js/img specific regex & transformation
+                    m = canvas_img_js_regex2.search(line)
+                    if m:
+                        asset_dir = m.group(1)
+                        asset_dir = os.path.join(theme['assets_name'], asset_dir)
+                        line = re.sub(
+                            "src='(.*?)'",
+                            'src="{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                            line
+                        )
+                    # Apply images specific regex & transformation
+                    m = canvas_images_regex.search(line)
+                    if m:
+                        asset_dir = m.group(1)
+                        asset_dir = os.path.join(theme['assets_name'], 'images', asset_dir)
+
+                        line = re.sub(
+                            '"images/(.*?)"',
+                            '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                            line
+                        )
+
+                    # Apply url specific regex & transformation
+                    m = canvas_url_regex.search(line)
+                    if m:
+                        asset_dir = m.group(1)
+                        asset_dir = os.path.join(theme['assets_name'], asset_dir)
+
+                        line = re.sub(
+                            r": url\('(.*?)'",
+                            '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                            line
+                        )
 
                     # Apply template specific regex & transformation
                     m = canvas_templates_regex.search(line)
@@ -334,20 +369,15 @@ def flaskify_canvas_theme(theme):
                             line
                         )
 
-
-
                     # NOTE: Every line must be written to outfile
                     # even if no transformations were applied.
                     outfile.write(line)
-
 
                 # Overwrite the input file now
                 infile.seek(0)
                 infile.write(outfile.getvalue())
                 infile.truncate()
                 outfile.close()
-
-
 
 
 def flaskify(theme):
