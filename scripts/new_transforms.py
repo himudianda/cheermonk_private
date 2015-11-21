@@ -150,9 +150,6 @@ def organize_canvas_static_assets(theme):
         create_dir_tree(src_dir, dst_dir, [])
         copy_dir_tree(src_dir, dst_dir, [], [])
 
-        # Remove old canvas static assets dir
-        delete_dir_tree(src_dir)
-
 
 def organize_canvas_templates(theme):
     src_dir = os.path.join(theme['temp_dirname'], 'HTML')
@@ -166,9 +163,25 @@ def organize_canvas_templates(theme):
     delete_dir_tree(os.path.join(dst_dir, 'css'))
     delete_dir_tree(os.path.join(dst_dir, 'demos'))
     delete_dir_tree(os.path.join(dst_dir, 'images'))
-    delete_dir_tree(os.path.join(dst_dir, 'include'))
     delete_dir_tree(os.path.join(dst_dir, 'js'))
     delete_dir_tree(os.path.join(dst_dir, 'less'))
+
+    # Note: we want to keep the html files within the include dir but delete all other
+    # dirs within include/ dir
+    include_dir = os.path.join(dst_dir, 'include')
+    include_ajax_dir_files = os.path.join(dst_dir, 'include/ajax')
+
+    files_to_delete1 = [ os.path.join(include_dir, file) for file in os.listdir(include_dir) if file.endswith(".php") ]
+    files_to_delete2 = [ os.path.join(include_ajax_dir_files, file) for file in os.listdir(include_ajax_dir_files) if file.endswith(".php") ]
+
+    files_to_delete = files_to_delete1 + files_to_delete2
+    for file in files_to_delete:
+        os.remove(file)
+
+    dirs_to_delete = [x[0] for x in os.walk(include_dir)]
+    for dir in dirs_to_delete:
+        if dir != include_ajax_dir_files and dir != include_dir:
+            delete_dir_tree(dir)
 
     delete_dir_tree(os.path.join(dst_dir, 'one-page/css'))
     delete_dir_tree(os.path.join(dst_dir, 'one-page/images'))
