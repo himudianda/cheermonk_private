@@ -1,6 +1,10 @@
 import os
-import shutil
 import re
+import StringIO
+import shutil
+
+from lib.dir_tree import create_dir_tree, copy_dir_tree, delete_dir_tree, create_dir
+
 
 cur_dir = os.getcwd()
 parent_dir = os.path.dirname(cur_dir)
@@ -10,7 +14,10 @@ tmp_dest_dir = "/tmp"
 METRONIC = {
     'name': "metronic",
     'dirname': "Metronic_v4.5.2",
-    'original_dirname': '/'.join([themes_dir, "Metronic_v4.5.2"]),
+    'original_dirname': os.path.join(themes_dir, "Metronic_v4.5.2"),
+    'temp_dirname': os.path.join(tmp_dest_dir, "Metronic_v4.5.2"),
+    'assets_name': "dashboard",
+    'templates_name': "sample_dashboard",
     'words_to_replace': {
         'metronic': 'cheermonk',
         'Metronic': 'Cheermonk',
@@ -19,13 +26,30 @@ METRONIC = {
         'keenthemes.com': 'cheermonk.com',
         'keenthemes': 'cheermonk',
         'KeenThemes': 'Cheermonk'
-    }
+    },
+    'dirs_to_ignore': [
+        '/_documentation', '/_resources', '/_start', '/theme_rtl',
+        '/theme/admin_1', '/theme/admin_1_angularjs', '/theme/admin_1_material_design', '/theme/admin_1_rounded',
+        '/theme/admin_2_angularjs', '/theme/admin_2_material_design', '/theme/admin_2_rounded',
+        '/theme/admin_3', '/theme/admin_3_angularjs', '/theme/admin_3_material_design', '/theme/admin_3_rounded',
+        '/theme/admin_4', '/theme/admin_4_angularjs', '/theme/admin_4_material_design', '/theme/admin_4_rounded',
+        '/theme/admin_5', '/theme/admin_5_material_design', '/theme/admin_5_rounded',
+        '/theme/admin_6', '/theme/admin_6_material_design', '/theme/admin_6_rounded',
+        '/theme/admin_7', '/theme/admin_7_material_design', '/theme/admin_7_rounded',
+        '/theme/sass', '/theme/demo'
+    ],
+    'files_to_ignore': [
+        '/readme.txt', '/start.html', '/theme/gulpfile.js', '/theme/package.json'
+    ]
 }
 
 CANVAS = {
     'name': "canvas",
     'dirname': "Canvas_v3.0.1",
-    'original_dirname': '/'.join([themes_dir, "Canvas_v3.0.1"]),
+    'original_dirname': os.path.join(themes_dir, "Canvas_v3.0.1"),
+    'temp_dirname': os.path.join(tmp_dest_dir, "Canvas_v3.0.1"),
+    'assets_name': "frontend",
+    'templates_name': "sample_frontend",
     'words_to_replace': {
         'canvas': 'cheermonk',
         'Canvas': 'Cheermonk',
@@ -34,368 +58,374 @@ CANVAS = {
         'semicolonweb.com': 'cheermonk.com',
         'semicolonweb': 'cheermonk',
         'SemiColonWeb': 'Cheermonk'
-    }
+    },
+    'dirs_to_ignore': ['/Documentation', '/HTML-RTL'],
+    'files_to_ignore': []
 }
 
 THEMES = [METRONIC, CANVAS]
 
 
-# Libraries
-def copyrecursively(source_folder, destination_folder):
+def delete_old_tmp_copy(theme):
     '''
-        Copy the entire directory tree recursively
+        Deletes previous copy of theme from /tmp directoy
     '''
-    for root, dirs, files in os.walk(source_folder):
-
-        src_path = root
-        dest_rel_path = src_path.replace(source_folder, "")
-        dst_path = ''.join([destination_folder, dest_rel_path])
-
-        if not os.path.exists(dst_path):
-            os.mkdir(dst_path)
-
-        for filename in files:
-            src_file_path = '/'.join([src_path, filename])
-            dst_file_path = '/'.join([dst_path, filename])
-
-            if os.path.exists(dst_file_path):
-                if os.stat(src_file_path).st_mtime > os.stat(dst_file_path).st_mtime:
-                    shutil.copy2(src_file_path, dst_file_path)
-            else:
-                shutil.copy2(src_file_path, dst_file_path)
+    delete_dir_tree(theme['temp_dirname'])
 
 
 def copy_theme_to_tmp(theme):
+    '''
+        Create a copy of the theme in /tmp directoy
+    '''
     source_folder = theme['original_dirname']
     dst_folder = theme['temp_dirname']
-    copyrecursively(source_folder, dst_folder)
+
+    # Create the destination directory structure first
+    create_dir_tree(source_folder, dst_folder, theme['dirs_to_ignore'])
+    copy_dir_tree(source_folder, dst_folder, theme['dirs_to_ignore'], theme['files_to_ignore'])
 
 
-def organize_dirs(theme):
-    if theme['name'] == "canvas":
-        dst_folder = theme['temp_dirname']
+def organize_metronic_static_assets(theme):
+    src_dir = os.path.join(theme['temp_dirname'], 'theme', 'assets')
+    dst_dir = os.path.join(theme['temp_dirname'], theme['assets_name'])
 
-        # Remove unwanted files & directories
-        dirs_to_delete = ['Documentation', 'HTML-RTL']
-        for directory in dirs_to_delete:
-            full_dirname = os.path.join(dst_folder, directory)
-            shutil.rmtree(full_dirname)
+    # Copy over metronic static assets to new dir
+    create_dir_tree(src_dir, dst_dir, [])
+    copy_dir_tree(src_dir, dst_dir, [], [])
 
-        # Move stuff to the correct location
-        statics_folder = os.path.join(dst_folder, "frontend")
+    # Remove some unwanted HTML files in assets dir
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/jqvmap/samples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/fullcalendar/demos'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/ckeditor/samples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amstockcharts/plugins/dataloader/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'plugins/amcharts/amstockcharts/plugins/responsive/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'plugins/amcharts/amstockcharts/plugins/export/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/ammap/plugins/dataloader/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/ammap/plugins/export/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'plugins/amcharts/amcharts/plugins/dataloader/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amcharts/plugins/responsive/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amstockcharts/plugins/responsive/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amstockcharts/plugins/export/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/ammap/plugins/responsive/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amcharts/plugins/dataloader/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/amcharts/amcharts/plugins/export/examples'))
+    delete_dir_tree(os.path.join(dst_dir, 'global/plugins/morris/examples'))
 
-        if not os.path.exists(statics_folder):
-            os.mkdir(statics_folder)
-
-        dirs_to_move = ['HTML/css', 'HTML/demos', 'HTML/images', 'HTML/include', 'HTML/js', 'HTML/less']
-        for directory in dirs_to_move:
-            full_dirname = os.path.join(dst_folder, directory)
-            shutil.move(full_dirname, statics_folder)
-
-        # Move pending template files into templates/sample_frontend dir
-        files_to_move = [
-            'frontend/include/ajax/portfolio-single-gallery.html',
-            'frontend/include/ajax/portfolio-single-image.html',
-            'frontend/include/ajax/portfolio-single-thumbs.html',
-            'frontend/include/ajax/portfolio-single-video.html',
-            'frontend/include/ajax/shop-item.html'
-        ]
-        new_dirname = os.path.join(dst_folder, 'HTML/include')
-        if not os.path.exists(new_dirname):
-            os.mkdir(new_dirname)
-        new_dirname = os.path.join(new_dirname, 'ajax')
-        if not os.path.exists(new_dirname):
-            os.mkdir(new_dirname)
-
-        for file in files_to_move:
-            full_filename = os.path.join(dst_folder, file)
-            shutil.move(full_filename, new_dirname)
-
-        # Move pending asset files into static dir
-        dirs_to_move = ['HTML/one-page/css', 'HTML/one-page/images', 'HTML/one-page/include']
-        files_to_move = ['HTML/one-page/onepage.css', 'HTML/style.css', 'HTML/style-import.css', 'HTML/style.less']
-        statics_one_page_folder = os.path.join(dst_folder, "frontend/one-page")
-
-        if not os.path.exists(statics_one_page_folder):
-            os.mkdir(statics_one_page_folder)
-        for directory in dirs_to_move:
-            full_dirname = os.path.join(dst_folder, directory)
-            shutil.move(full_dirname, statics_one_page_folder)
-        for file in files_to_move:
-            full_filename = os.path.join(dst_folder, file)
-            if "one-page" in file:
-                shutil.move(full_filename, statics_one_page_folder)
-            else:
-                shutil.move(full_filename, statics_folder)
-
-        # Rename the directories
-        os.rename(os.path.join(dst_folder, 'HTML'), os.path.join(dst_folder, 'sample_frontend'))
-
-    elif theme['name'] == "metronic":
-        dst_folder = theme['temp_dirname']
-
-        # Remove unwanted files & directories
-        dirs_to_delete = ['_documentation', '_resources', '_start', 'theme_rtl']
-        files_to_delete = ['readme.txt', 'start.html']
-        for directory in dirs_to_delete:
-            full_dirname = os.path.join(dst_folder, directory)
-            shutil.rmtree(full_dirname)
-        for file in files_to_delete:
-            full_filename = os.path.join(dst_folder, file)
-            os.remove(full_filename)
-
-        # Move stuff to the correct location
-        dirs_to_move = ['theme/admin_2', 'theme/assets']
-        files_to_move = ['theme/admin_2/favicon.ico']
-        for file in files_to_move:
-            full_filename = os.path.join(dst_folder, file)
-            shutil.move(full_filename, '/'.join([dst_folder, 'theme/assets']))
-        for directory in dirs_to_move:
-            full_dirname = os.path.join(dst_folder, directory)
-            shutil.move(full_dirname, dst_folder)
-        shutil.rmtree(os.path.join(dst_folder, 'theme'))
-
-        # Rename the directories
-        os.rename(os.path.join(dst_folder, 'admin_2'), os.path.join(dst_folder, 'sample_dashboard'))
-        os.rename(os.path.join(dst_folder, 'assets'), os.path.join(dst_folder, 'dashboard'))
+    # Remove old metronic static assets dir
+    delete_dir_tree(src_dir)
 
 
-def delete_old_tmp_copy(theme):
-    shutil.rmtree(theme['temp_dirname'])
+def organize_metronic_templates(theme):
+    src_dir = os.path.join(theme['temp_dirname'], 'theme', 'admin_2')
+    dst_dir = os.path.join(theme['temp_dirname'], theme['templates_name'])
+
+    # Copy over metronic templates to new dir
+    create_dir_tree(src_dir, dst_dir, [])
+    copy_dir_tree(src_dir, dst_dir, [], [])
+
+    # Remove old metronic templates dir
+    parent_dir = os.path.dirname(src_dir)
+    delete_dir_tree(parent_dir)
 
 
-def do_renaming(theme):
+def organize_canvas_static_assets(theme):
+    dir_names = ['css', 'demos', 'images', 'js', 'include', 'one-page/css', 'one-page/images', 'one-page/include']
+    files_to_move = ['one-page/onepage.css', 'style.css', 'style-import.css', 'style.less']
+
+    # Create the parents directories before the child directories are created in the for
+    # loop below.
+    dst_assets_dir = os.path.join(theme['temp_dirname'], theme['assets_name'])
+    create_dir(dst_assets_dir)
+    dst_assets_dir = os.path.join(theme['temp_dirname'], theme['assets_name'], 'one-page')
+    create_dir(dst_assets_dir)
+
+    for file in files_to_move:
+        full_filename = os.path.join(theme['temp_dirname'], 'HTML', file)
+        shutil.move(full_filename, os.path.join(theme['temp_dirname'], theme['assets_name'], file))
+
+    for dirname in dir_names:
+        src_dir = os.path.join(theme['temp_dirname'], 'HTML', dirname)
+        dst_dir = os.path.join(theme['temp_dirname'], theme['assets_name'], dirname)
+
+        create_dir_tree(src_dir, dst_dir, [])
+        copy_dir_tree(src_dir, dst_dir, [], [])
+
+
+def organize_canvas_templates(theme):
+    src_dir = os.path.join(theme['temp_dirname'], 'HTML')
+    dst_dir = os.path.join(theme['temp_dirname'], theme['templates_name'])
+
+    # Copy over metronic templates to new dir
+    create_dir_tree(src_dir, dst_dir, [])
+    copy_dir_tree(src_dir, dst_dir, [], [])
+
+    # Remove some unwanted assets dir & files in templates dir
+    delete_dir_tree(os.path.join(dst_dir, 'css'))
+    delete_dir_tree(os.path.join(dst_dir, 'demos'))
+    delete_dir_tree(os.path.join(dst_dir, 'images'))
+    delete_dir_tree(os.path.join(dst_dir, 'js'))
+    delete_dir_tree(os.path.join(dst_dir, 'less'))
+
+    # Note: we want to keep the html files within the include dir but delete all other
+    # dirs within include/ dir
+    include_dir = os.path.join(dst_dir, 'include')
+    include_ajax_dir_files = os.path.join(dst_dir, 'include/ajax')
+
+    files_to_delete1 = [ os.path.join(include_dir, file) for file in os.listdir(include_dir) if file.endswith(".php") ]
+    files_to_delete2 = [ os.path.join(include_ajax_dir_files, file) for file in os.listdir(include_ajax_dir_files) if file.endswith(".php") ]
+
+    files_to_delete = files_to_delete1 + files_to_delete2
+    for file in files_to_delete:
+        os.remove(file)
+
+    dirs_to_delete = [x[0] for x in os.walk(include_dir)]
+    for dir in dirs_to_delete:
+        if dir != include_ajax_dir_files and dir != include_dir:
+            delete_dir_tree(dir)
+
+    delete_dir_tree(os.path.join(dst_dir, 'one-page/css'))
+    delete_dir_tree(os.path.join(dst_dir, 'one-page/images'))
+    delete_dir_tree(os.path.join(dst_dir, 'one-page/include'))
+
+    # Remove old canvas templates dir
+    delete_dir_tree(src_dir)
+
+
+def organize_theme_dirs(theme):
+    # Move all static_assets to static_assets dir
+    # More all templates to templates dir
+    if theme['name'] == "metronic":
+        organize_metronic_static_assets(theme)
+        organize_metronic_templates(theme)
+    elif theme['name'] == "canvas":
+        organize_canvas_static_assets(theme)
+        organize_canvas_templates(theme)
+
+    # Remove all other directories
+
+
+def rename_sensitive_words(theme):
+    '''
+        Remove all theme specific words & urls
+    '''
     sensitive_words = theme['words_to_replace']
     pattern = re.compile(r'(' + '|'.join(sensitive_words.keys()) + r')')
 
-    dirname = theme['temp_dirname']
-    for root, dirs, files in os.walk(dirname):
+    for root, dirs, files in os.walk(theme['temp_dirname']):
         for filename in files:
-            full_file_path = '/'.join([root, filename])
+            full_file_path = os.path.join(root, filename)
 
-            # Rename the contents within the file
+            # Rename sensitive words within files
             with open(full_file_path, 'r+') as infile:
                 data = infile.read()
                 result = pattern.sub(lambda x: sensitive_words[x.group()], data)
 
                 # http://stackoverflow.com/questions/6648493/open-file-for-both-reading-and-writing
+                # Overwrite the file
                 infile.seek(0)
                 infile.write(result)
                 infile.truncate()
 
-                '''
-                for line in infile:
-
-                    # http://stackoverflow.com/questions/6531482/how-to-check-if-a-string-contains-an-element-from-a-list-in-python
-                    if any(word in line for word in sensitive_words):
-
-                        # http://stackoverflow.com/questions/2400504/easiest-way-to-replace-a-string-using-a-dictionary-of-replacements
-                        pattern = re.compile(r'\b(' + '|'.join(sensitive_words.keys()) + r')\b')
-                        result = pattern.sub(lambda x: sensitive_words[x.group()], line)
-
-                        print result
-                '''
-
-            # Rename the directory/filenames
+            # Rename directory/filenames to remove sensitive words
             if any(word in filename for word in sensitive_words):
                 new_filename = pattern.sub(lambda x: sensitive_words[x.group()], filename)
-                new_file_path = '/'.join([root, new_filename])
+
+                new_file_path = os.path.join(root, new_filename)
                 os.rename(full_file_path, new_file_path)
 
 
-def flaskify(theme):
-
+def flaskify_metronic_theme(theme):
     metronic_assets_regex = re.compile('../assets/(.*?)"')
     metronic_templates_regex = re.compile('href="(.*?).html"')
+
+    # Only flaskify template files - no static assets should be flaskified.
+    theme_template_dir = os.path.join(theme['temp_dirname'], theme['templates_name'])
+
+    for root, dirs, files in os.walk(theme_template_dir):
+        for filename in files:
+            full_file_path = '/'.join([root, filename])
+
+            with open(full_file_path, 'r+') as infile:
+                outfile = StringIO.StringIO()
+                for line in infile.readlines():
+
+                    # Apply asset specific regex & transformation
+                    m = metronic_assets_regex.search(line)
+                    if m:
+                        asset_dir = m.group(1)
+                        asset_dir = os.path.join(theme['assets_name'], asset_dir)
+                        line = re.sub(
+                            '"../assets/(.*?)"',
+                            '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                            line
+                        )
+
+                    # Apply template specific regex & transformation
+                    m = metronic_templates_regex.search(line)
+                    if m:
+                        endpoint = m.group(1)
+                        line = re.sub(
+                            '"(.*?).html"',
+                            '"{{ url_for(\''+theme['templates_name']+'.'+endpoint+'\') }}"',
+                            line
+                        )
+
+                    outfile.write(line)
+
+                # Overwrite the input file now
+                infile.seek(0)
+                infile.write(outfile.getvalue())
+                infile.truncate()
+
+
+def flaskify_canvas_theme(theme):
     canvas_assets_regex = re.compile('href="(.*?)"')
     canvas_img_js_regex = re.compile('src="(.*?)"')
+    canvas_img_js_regex2 = re.compile("src='(.*?)'")
+    canvas_images_regex = re.compile('"images/(.*?)"')
+    canvas_url_regex = re.compile(r": url\('(.*?)'")
     canvas_templates_regex = re.compile('href="(.*?).html"')
 
-    templates_root_dir = '/home/himudian/Code/cheermonk/website/cheermonk/templates'
-    if not os.path.exists(templates_root_dir):
-        os.mkdir(templates_root_dir)
+    # Only flaskify template files - no static assets should be flaskified.
+    theme_template_dir = os.path.join(theme['temp_dirname'], theme['templates_name'])
 
-    if not os.path.exists('/'.join([templates_root_dir, 'sample_dashboard'])):
-        os.mkdir('/'.join([templates_root_dir, 'sample_dashboard']))
-
-    if not os.path.exists('/'.join([templates_root_dir, 'sample_frontend'])):
-        os.mkdir('/'.join([templates_root_dir, 'sample_frontend']))
-
-    if not os.path.exists('/'.join([templates_root_dir, 'sample_frontend/one-page'])):
-        os.mkdir('/'.join([templates_root_dir, 'sample_frontend/one-page']))
-
-    if not os.path.exists('/'.join([templates_root_dir, 'sample_frontend/include'])):
-        os.mkdir('/'.join([templates_root_dir, 'sample_frontend/include']))
-
-    if not os.path.exists('/'.join([templates_root_dir, 'sample_frontend/include/ajax'])):
-        os.mkdir('/'.join([templates_root_dir, 'sample_frontend/include/ajax']))
-
-    static_root_dir = '/home/himudian/Code/cheermonk/website/cheermonk/static'
-    if not os.path.exists(static_root_dir):
-        os.mkdir(static_root_dir)
-
-    if not os.path.exists('/'.join([static_root_dir, 'dashboard'])):
-        os.mkdir('/'.join([static_root_dir, 'dashboard']))
-
-    if not os.path.exists('/'.join([static_root_dir, 'frontend'])):
-        os.mkdir('/'.join([static_root_dir, 'frontend']))
-
-    dirname = theme['temp_dirname']
-    for root, dirs, files in os.walk(dirname):
-
-        # Ignore all template directories
-        #if '/sample_' in root:
-        #    continue
-
-        # Create directories that dont exist
-        out_dir_path = root.replace(theme['temp_dirname'], '')
-        out_dir_path = ''.join([static_root_dir, out_dir_path])
-
-        if not os.path.exists(out_dir_path):
-            os.mkdir(out_dir_path)
-
+    for root, dirs, files in os.walk(theme_template_dir):
         for filename in files:
-
-            # All static files ARE NOT to be Flaskified.
-            # Only copy it to the prject
-            if '.html' not in filename:
-
-                full_file_path = '/'.join([root, filename])
-                with open(full_file_path, 'r') as infile:
-                    out_file_path = '/'.join([out_dir_path, filename])
-
-                    outfile = open(out_file_path, 'w')
-                    outfile.write(infile.read())
-                    outfile.close()
-
-                # Dont Flaskify static files
-                continue
-
             full_file_path = '/'.join([root, filename])
-            with open(full_file_path, 'r') as infile:
-                if theme['name'] == 'metronic':
-                    out_file_path = '/'.join([templates_root_dir, 'sample_dashboard', filename])
-                    outfile = open(out_file_path, 'w')
 
-                    for line in infile.readlines():
-                        m = metronic_assets_regex.search(line)
-                        if m:
-                            asset_dir = m.group(1)
-                            line = re.sub(
-                                '"../assets/(.*?)"',
-                                '"{{ url_for(\'static\', filename=\'dashboard/'+asset_dir+'\') }}"',
-                                line
-                            )
-
-                        m = metronic_templates_regex.search(line)
-                        if m:
-                            endpoint = m.group(1)
-                            line = re.sub(
-                                '"(.*?).html"',
-                                '"{{ url_for(\'sample_dashboard.'+endpoint+'\') }}"',
-                                line
-                            )
-
+            with open(full_file_path, 'r+') as infile:
+                outfile = StringIO.StringIO()
+                for line in infile.readlines():
+                    # If public CDN is used for static assets - they will have http: or https:
+                    # in the line. Ignore flaskifying those lines
+                    if 'http:' in line or 'https:' in line:
+                        # NOTE: Every line must be written to outfile
+                        # even if no transformations were applied.
                         outfile.write(line)
-                    outfile.close()
+                        continue
 
-                elif theme['name'] == 'canvas':
+                    # Apply css asset specific regex & transformation
+                    m = canvas_assets_regex.search(line)
+                    if m and '.html' not in m.group(1):
+                        asset_dir = m.group(1)
 
-                    if 'one-page/' in full_file_path:
-                        out_file_path = '/'.join([templates_root_dir, 'sample_frontend/one-page', filename])
-                    elif 'include/ajax' in full_file_path:
-                        out_file_path = '/'.join([templates_root_dir, 'sample_frontend/include/ajax', filename])
-                    else:
-                        out_file_path = '/'.join([templates_root_dir, 'sample_frontend', filename])
-                    outfile = open(out_file_path, 'w')
+                        # If url is marked as # - dont flaskify it
+                        # coz flask url_for breaks when url is #
+                        if asset_dir != '#':
+                            file_dir_name = os.path.dirname(full_file_path)
+                            dir_rel_path = os.path.relpath(file_dir_name, theme_template_dir)
 
-                    for line in infile.readlines():
-                        if 'http' in line:
-                            continue
-
-                        m = canvas_assets_regex.search(line)
-                        if m and '.html' not in m.group(1):
-                            asset_dir = m.group(1)
-
-                            if asset_dir == '#':
-                                pass
-                            else:
-                                if 'one-page' in full_file_path:
-                                    if '../' in asset_dir:
-                                        asset_dir = asset_dir.strip('../')
-                                        line = re.sub(
-                                            '"../(.*?)"',
-                                            '"{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"',
-                                            line
-                                        )
-                                    else:
-                                        line = re.sub(
-                                            'href="(.*?)"',
-                                            'href="{{ url_for(\'static\', filename=\'frontend/one-page/'+asset_dir+'\') }}"',
-                                            line
-                                        )
-
-                                        m = canvas_img_js_regex.search(line)
-                                        if m:
-                                            img_dir = m.group(1)
-                                            line = re.sub(
-                                                'src="(.*?)"',
-                                                'src="{{ url_for(\'static\', filename=\'frontend/one-page/'+img_dir+'\') }}"',
-                                                line
-                                            )
-                                else:
-                                    line = re.sub(
-                                        'href="(.*?)"',
-                                        'href="{{ url_for(\'static\', filename=\'frontend/'+asset_dir+'\') }}"',
-                                        line
-                                    )
-                                    m = canvas_img_js_regex.search(line)
-                                    if m:
-                                        img_dir = m.group(1)
-                                        line = re.sub(
-                                            'src="(.*?)"',
-                                            'src="{{ url_for(\'static\', filename=\'frontend/'+img_dir+'\') }}"',
-                                            line
-                                        )
-
-                        m = canvas_templates_regex.search(line)
-                        if m:
-                            endpoint = m.group(1)
-                            endpoint = endpoint.replace('/', '_').replace('-', '_')
-
-                            if endpoint.startswith("40") or endpoint.startswith("50"):
-                                endpoint = '_'+endpoint
-
+                            asset_dir = os.path.join(theme['assets_name'], dir_rel_path, asset_dir)
                             line = re.sub(
-                                '"(.*?).html"',
-                                '"{{ url_for(\'sample_frontend.'+endpoint+'\') }}"',
+                                'href="(.*?)"',
+                                'href="{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
                                 line
                             )
 
-                        m = canvas_img_js_regex.search(line)
-                        if m:
-                            img_dir = m.group(1)
-                            line = re.sub(
-                                'src="(.*?)"',
-                                'src="{{ url_for(\'static\', filename=\'frontend/'+img_dir+'\') }}"',
-                                line
-                            )
+                    # Apply js/img specific regex & transformation
+                    m = canvas_img_js_regex.search(line)
+                    if m:
+                        asset_dir = m.group(1)
+                        asset_dir = os.path.join(theme['assets_name'], asset_dir)
+                        line = re.sub(
+                            'src="(.*?)"',
+                            'src="{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                            line
+                        )
 
-                        outfile.write(line)
-                    outfile.close()
+                    # Apply js/img specific regex & transformation
+                    m = canvas_img_js_regex2.search(line)
+                    if m:
+                        asset_dir = m.group(1)
+                        asset_dir = os.path.join(theme['assets_name'], asset_dir)
+                        line = re.sub(
+                            "src='(.*?)'",
+                            'src="{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                            line
+                        )
+                    # Apply images specific regex & transformation
+                    m = canvas_images_regex.search(line)
+                    if m:
+                        asset_dir = m.group(1)
+                        asset_dir = os.path.join(theme['assets_name'], 'images', asset_dir)
+
+                        line = re.sub(
+                            '"images/(.*?)"',
+                            '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                            line
+                        )
+
+                    # Apply url specific regex & transformation
+                    m = canvas_url_regex.search(line)
+                    if m:
+                        asset_dir = m.group(1)
+                        asset_dir = os.path.join(theme['assets_name'], asset_dir)
+
+                        line = re.sub(
+                            r": url\('(.*?)'",
+                            '"{{ url_for(\'static\', filename=\''+asset_dir+'\') }}"',
+                            line
+                        )
+
+                    # Apply template specific regex & transformation
+                    m = canvas_templates_regex.search(line)
+                    if m:
+                        endpoint = m.group(1)
+                        endpoint = endpoint.replace('/', '_').replace('-', '_')
+
+                        if endpoint.startswith("40") or endpoint.startswith("50"):
+                            endpoint = '_'+endpoint
+
+                        line = re.sub(
+                            '"(.*?).html"',
+                            '"{{ url_for(\''+theme['templates_name']+'.'+endpoint+'\') }}"',
+                            line
+                        )
+
+                    # NOTE: Every line must be written to outfile
+                    # even if no transformations were applied.
+                    outfile.write(line)
+
+                # Overwrite the input file now
+                infile.seek(0)
+                infile.write(outfile.getvalue())
+                infile.truncate()
+                outfile.close()
+
+
+def flaskify(theme):
+    if theme['name'] == "metronic":
+        flaskify_metronic_theme(theme)
+    if theme['name'] == "canvas":
+        flaskify_canvas_theme(theme)
+
+
+def overwrite_cheermonk_project_files(theme):
+    proj_templates_dir = '/home/himudian/Code/cheermonk/website/cheermonk/templates'
+    proj_static_dir = '/home/himudian/Code/cheermonk/website/cheermonk/static'
+
+    # Delete existing template & static dir for cheermonk project
+    delete_dir_tree(os.path.join(proj_templates_dir, theme['templates_name']))
+    delete_dir_tree(os.path.join(proj_static_dir, theme['assets_name']))
+
+    # Move templates & static directory from /tmp to cheermonk project directory
+    shutil.move(os.path.join(theme['temp_dirname'], theme['templates_name']), proj_templates_dir)
+    shutil.move(os.path.join(theme['temp_dirname'], theme['assets_name']), proj_static_dir)
+
+
+def remove_tmp_files(theme):
+    delete_dir_tree(theme['temp_dirname'])
 
 
 def main():
     for theme in THEMES:
-        theme['temp_dirname'] = '/'.join([tmp_dest_dir, theme['dirname']])
-
         delete_old_tmp_copy(theme)
         copy_theme_to_tmp(theme)
-        organize_dirs(theme)
-
-        do_renaming(theme)
-
+        organize_theme_dirs(theme)
+        rename_sensitive_words(theme)
         flaskify(theme)
+        overwrite_cheermonk_project_files(theme)
+        remove_tmp_files(theme)
 
 if __name__ == "__main__":
     main()
