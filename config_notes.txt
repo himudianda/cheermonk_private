@@ -1,0 +1,188 @@
+On a new Ubuntu 14.04 machine
+
+
+sudo apt-get update
+
+sudo apt-get install -f -y curl python-dev libpq-dev nodejs nodejs-legacy npm
+
+Install Docker
+wget -qO- https://get.docker.com/ | sh
+
+Install pip
+curl https://bootstrap.pypa.io/get-pip.py > /tmp/get-pip.py
+sudo python /tmp/get-pip.py
+
+Docker-compose
+curl -L https://github.com/docker/compose/releases/download/1.4.2/docker-compose-Linux-x86_64 > /tmp/docker-compose
+
+chmod +x /tmp/docker-compose
+sudo mv /tmp/docker-compose /usr/local/bin
+
+Install virtualenv / virtualenvwrapper
+sudo pip install virtualenv
+sudo pip install virtualenvwrapper
+
+
+
+[Windows and Linux users] Append the following lines to your $HOME/.bashrc file
+export WORKON_HOME=$HOME/.virtualenvs
+source /usr/local/bin/virtualenvwrapper.sh
+        
+
+
+Address potential PIP permission issues
+sudo rm -rf ~/.cache/pip
+
+
+Configure Docker to work without needing root (Mac users can skip this)
+# Log out of your machine to make the Docker changes take effect!
+sudo usermod -aG docker ${USER}
+
+
+
+
+
+cd /tmp
+mkdir catwatch
+cd catwatch
+git clone https://github.com/nickjj/build-a-saas-app-with-flask.git website
+cd website
+mkvirtualenv catwatch
+
+Prepare the CLI tool and install all dependencies
+pip install --editable .
+pip install -r requirements.txt
+npm install
+
+Pull in the Docker images
+docker-compose pull
+
+
+
+Now create instance/settings.py file with all the required configs for - Stripe, Twitter & Gmail.
+
+
+Now; ensure that the git repo is set to the tutorial location
+git checkout v1-screencasts
+
+Build assets
+run assets build
+
+
+
+Start all docker containers 
+docker-compose up
+
+In a new terminal:
+workon catwatch
+run db reset catwatch catwatch_test
+
+Validate stuff are working fine
+run db list
+run test
+
+
+Run the App
+run all
+
+
+
+You can see it working on localhost:8000
+
+
+Add fake data
+Open a terminal and run:
+workon catwatch
+run add all
+
+
+
+        Source walk-thru
+
+.dockerignore  — All files to be excluded from docker image
+.travis.yml - Continuous integration
+
+
+/build/ dir —> 
+  1. output of building assets 
+  2. public folder served by nginx
+
+node_modules/ 
+  created by npm install command
+  houses all the node modules for frontend
+
+catwatch/ —>
+  - its the app directory
+  - lib/ 
+    - A bag of functions that are useful
+    - Can become reusable packages in the future
+  - blueprint/
+    - Used to section off a Flask App
+
+
+/config
+  - Used to config file
+  - settings.py —> app config that is checked in to git
+    SECRET_KEY ==> Used to sign cookies
+    SEED_ADMIN_EMAIL ==> email addr of admin
+    SQLALCHEMY_POOL_SIZE ==> in dev set it to a higher num
+                        i.e. 25 for a 1GB RAM server
+
+/instance
+  - settings.py -> not checked in to git
+                   great place to save all your API keys n stuff
+
+
+
+    Tracing a run all command
+
+run all
+1. cli/commands/cmd_all.py
+    calls “honcho start”
+2. Procfile is called by honcho
+    which inturn calls:
+    - docker-compose.yml
+    - package.json file —> scripts ==> start
+    - gunicorn
+        under app.py file —> the create_app() function is invoked.
+        create_app() initializes the Flask app as per Flask Factory
+        pattern.
+    
+
+
+User Modules
+
+Under initialize.py —> Flask login is initialized
+
+
+
+
+Docker COmmands
+
+1. List all docker containers:
+docker ps -a
+docker ps -aq
+
+2. Remove all docker containers
+docker rm $(docker ps -aq)
+
+3. List all docker images
+docker images
+docker images -a
+docker images -aq
+
+4. Remove all docker images
+docker rmi $(docker images -aq)
+
+
+5. Getting SSH access to docker container
+$ sudo docker exec -i -t 665b4a1e17b6 bash #by ID
+or
+$ sudo docker exec -i -t loving_heisenberg bash #by Name
+$ root@665b4a1e17b6:/#
+
+
+
+Unix Commands
+1. search & replace:
+find . -type f -exec sed -i 's/catwatch/cheermonk/g' {} \;

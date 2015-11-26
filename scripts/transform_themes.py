@@ -84,6 +84,11 @@ def copy_theme_to_tmp(theme):
     create_dir_tree(source_folder, dst_folder, theme['dirs_to_ignore'])
     copy_dir_tree(source_folder, dst_folder, theme['dirs_to_ignore'], theme['files_to_ignore'])
 
+    if theme['name'] == "metronic":
+        welcome_file_src_path = os.path.join(source_folder, 'theme/admin_6/start.html')
+        welcome_file_dst_path = os.path.join(dst_folder, 'theme/admin_2/welcome.html')
+        shutil.copyfile(welcome_file_src_path, welcome_file_dst_path)
+
 
 def organize_metronic_static_assets(theme):
     src_dir = os.path.join(theme['temp_dirname'], 'theme', 'assets')
